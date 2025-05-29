@@ -10,7 +10,7 @@ src/
 ├── Validator/
 ├── Exceptions/
 ├── Logger/
-├── Config/
+**├── Config/**
 ├── Cache/
 ├── Url/
 ├── Container/
