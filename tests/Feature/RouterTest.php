@@ -1,8 +1,6 @@
 <?php
 
-use Radiant\http\Request\Router;
-use Radiant\http\Response\Response;
-use Radiant\http\Request\Request;
+use Radiant\http\Router;
 
 beforeEach(function () {
     $this->router = new Router();

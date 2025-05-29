@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Radiant\Collection\SmartCollection;
-use Radiant\Http\Request\Request;
+use Radiant\Http\Request;
 use Tests\Mocks\MockPhpStream;
 
 beforeEach(function () {

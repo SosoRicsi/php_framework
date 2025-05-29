@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Radiant\http\Response;
+namespace Radiant\Http;
 
 final class Response
 {
