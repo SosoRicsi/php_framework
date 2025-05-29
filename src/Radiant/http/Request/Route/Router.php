@@ -6,6 +6,8 @@ namespace Radiant\Http\Request\Route;
 
 use Radiant\Http\Request\Request;
 use Radiant\http\Response\Response;
+use Radiant\Http\Middleware\MiddlewareHandler;
+use Radiant\Http\Middleware\MiddlewareInterface;
 
 class Router
 {
@@ -72,7 +74,7 @@ class Router
 	public function redirect(string $path, string $redirectTo): RouteDefinition
 	{
 		return new RouteDefinition($this, 'POST', $path, function () use ($redirectTo) {
-			header("Location: ".$redirectTo, true, 302);
+			header("Location: " . $redirectTo, true, 302);
 		});
 	}
 
@@ -202,24 +204,37 @@ class Router
 			if ($this->match($requestPath, $route['path'], $params)) {
 				$this->resolveRequestSubclass($route['handler']);
 
-				foreach ($route['middleware'] as $middleware) {
-					if (!$this->instantiateOrGetSharedInstance($middleware)->handle($this->request, $this->response)) {
-						return;
+				$handler = function (Request $req, Response $res) use ($route, $params) {
+					$deps = $this->resolveDependencies($params, $route['handler'], [
+						Request::class => $req,
+						Response::class => $res
+					]);
+
+					is_array($route['handler'])
+						? call_user_func_array([new $route['handler'][0], $route['handler'][1]], $deps)
+						: call_user_func_array($route['handler'], $deps);
+
+					return $res;
+				};
+
+				$middlewareHandler = new MiddlewareHandler();
+
+				// Add pre-handler middleware
+				foreach ($route['middleware'] as $middlewareClass) {
+					$instance = $this->instantiateOrGetSharedInstance($middlewareClass);
+					if (!$instance instanceof MiddlewareInterface) {
+						throw new \RuntimeException("$middlewareClass must implement MiddlewareInterface");
 					}
+					$middlewareHandler->add($instance);
 				}
 
-				$deps = $this->resolveDependencies($params, $route['handler'], [
-					Request::class => $this->request,
-					Response::class => $this->response
-				]);
+				$response = $middlewareHandler->handle($this->request, $this->response, $handler);
 
-				is_array($route['handler'])
-					? call_user_func_array([new $route['handler'][0], $route['handler'][1]], $deps)
-					: call_user_func_array($route['handler'], $deps);
-
-				foreach ($route['afterMiddleware'] as $middleware) {
-					if (!$this->instantiateOrGetSharedInstance($middleware)->handle($this->request, $this->response)) {
-						break;
+				// Add and run after-middleware (if needed, you can wrap these in another MiddlewareHandler too)
+				foreach ($route['afterMiddleware'] as $afterMiddleware) {
+					$instance = $this->instantiateOrGetSharedInstance($afterMiddleware);
+					if ($instance instanceof MiddlewareInterface) {
+						$response = $instance->handle($this->request, $response, fn($req, $res) => $res);
 					}
 				}
 

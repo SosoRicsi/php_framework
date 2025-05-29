@@ -1,6 +1,8 @@
 <?php
 
+use Radiant\Http\Middleware\MiddlewareInterface;
 use Radiant\Http\Request\Route\Router;
+use Radiant\Http\Response\Response;
 
 beforeEach(function () {
     $this->router = new Router();
@@ -79,10 +81,10 @@ test('404 fallback works', function () {
 test('it calls middleware before handler', function () {
     $called = false;
 
-    $middleware = new class {
-        public function handle($request, $response) {
+    $middleware = new class implements MiddlewareInterface {
+        public function handle($request, $response, $next): Response {
             print 'MW|';
-            return true;
+            return $next($request, $response);
         }
     };
 
@@ -98,10 +100,10 @@ test('it calls middleware before handler', function () {
 });
 
 test('it calls after middleware after handler', function () {
-    $middleware = new class {
-        public function handle($request, $response) {
+    $middleware = new class implements MiddlewareInterface {
+        public function handle($request, $response, $next): Response {
             print '|AFTER';
-            return true;
+            return $next($request, $response);
         }
     };
 
@@ -117,10 +119,10 @@ test('it calls after middleware after handler', function () {
 });
 
 test('middleware can stop execution', function () {
-    $middleware = new class {
-        public function handle($request, $response) {
+    $middleware = new class implements MiddlewareInterface{
+        public function handle($request, $response, $next): Response {
             echo 'BLOCKED';
-            return false;
+            return $response;
         }
     };
 

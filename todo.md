@@ -1,8 +1,6 @@
 # Paths
 
 src/
-├── Auth/
-├── Middleware/
 ├── Validator/
 ├── Exceptions/
 ├── Logger/
