@@ -4,17 +4,13 @@ src/
 ├── Router/
 ├── Request/
 ├── Response/
-**├── Session/**
 ├── Auth/
 ├── Middleware/
 ├── Validator/
 ├── Exceptions/
 ├── Logger/
-**├── Config/**
 ├── Cache/
 ├── Url/
-├── Container/
-**├── Collection/**
 └── Docs/
 
 ---
@@ -24,5 +20,3 @@ src/
 *Italic: under development*
 
 ~~Striek: removed~~
-
-**Bold: done**
