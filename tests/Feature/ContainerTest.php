@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Radiant\Container\Container;
 use Radiant\Container\Exceptions\ContainerException;
 
@@ -38,7 +40,7 @@ test('it throws exception if class is not instantiable', function () {
 });
 
 test('it can autowire classes with no dependencies', function () {
-    class NoDeps {}
+    final class NoDeps {}
 
     $instance = $this->container->take(NoDeps::class);
 
@@ -46,11 +48,13 @@ test('it can autowire classes with no dependencies', function () {
 });
 
 test('it can autowire dependencies recursively', function () {
-    class Foo {}
-    class Bar {
+    final class Foo {}
+    final class Bar
+    {
         public function __construct(public Foo $foo) {}
     }
-    class Baz {
+    final class Baz
+    {
         public function __construct(public Bar $bar) {}
     }
 
@@ -62,7 +66,8 @@ test('it can autowire dependencies recursively', function () {
 });
 
 test('it throws if constructor has unresolvable builtin dependency', function () {
-    class NeedsScalar {
+    final class NeedsScalar
+    {
         public function __construct(string $name) {}
     }
 
