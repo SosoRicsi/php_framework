@@ -1,9 +1,6 @@
 # Paths
 
 src/
-├── Router/
-├── Request/
-├── Response/
 ├── Auth/
 ├── Middleware/
 ├── Validator/
