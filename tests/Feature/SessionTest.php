@@ -104,22 +104,3 @@ test('it can retrieve and clear all flash messages', function () {
 
     expect(Session::flashed('notice', 'missing'))->toBe('missing');
 });
-
-test('it can use the sessid() helper', function () {
-    $session_id = sessid();
-
-    expect($session_id)->toBe(session_id());
-});
-
-test('it can use the session_save() helper', function () {
-    session_save('item', 'value');
-
-    expect(Session::get('item'))->toBe('value');
-});
-
-test('it can user the session() helper', function () {
-    Session::set('item1', 'value1');
-
-    expect(session('item1'))->toBe('value1')
-        ->and(session('item2'))->toBe(null);
-});

@@ -91,9 +91,3 @@ test('it can chunk the collection', function () {
         ->and($chunks[0]->all())->toBe([1, 2])
         ->and($chunks[1]->all())->toBe([3, 4]);
 });
-
-test('it can use the wrap() helper', function () {
-    $collection = wrap([1, 2, 3]);
-
-    expect($collection)->toMatchArray([1, 2, 3]);
-});

@@ -7,10 +7,7 @@
         "psr-4": {
             "Radiant\\": "src/Radiant",
             "Tests\\": "tests/"
-        },
-        "files": [
-            "src/Radiant/functions.php"
-        ]
+        }
     },
     "authors": [
         {
