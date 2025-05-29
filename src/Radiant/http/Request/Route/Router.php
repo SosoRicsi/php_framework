@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Radiant\http\Request;
+namespace Radiant\Http\Request\Route;
 
+use Radiant\Http\Request\Request;
 use Radiant\http\Response\Response;
 
 class Router
@@ -38,39 +39,41 @@ class Router
 		$this->version = $version ?? '';
 	}
 
-	public function get(string $path, mixed $handler, array $middleware = [], array $afterMiddleware = []): void
+	public function get(string $path, mixed $handler): RouteDefinition
 	{
-		$this->addRoute('GET', $path, $handler, $middleware, $afterMiddleware);
+		return new RouteDefinition($this, 'GET', $path, $handler);
 	}
 
-	public function post(string $path, mixed $handler, array $middleware = [], array $afterMiddleware = []): void
+	public function post(string $path, mixed $handler): RouteDefinition
 	{
-		$this->addRoute('POST', $path, $handler, $middleware, $afterMiddleware);
+		return new RouteDefinition($this, 'POST', $path, $handler);
 	}
 
-	public function put(string $path, mixed $handler, array $middleware = [], array $afterMiddleware = []): void
+	public function put(string $path, mixed $handler): RouteDefinition
 	{
-		$this->addRoute('PUT', $path, $handler, $middleware, $afterMiddleware);
+		return new RouteDefinition($this, 'PUT', $path, $handler);
 	}
 
-	public function patch(string $path, mixed $handler, array $middleware = [], array $afterMiddleware = []): void
+	public function patch(string $path, mixed $handler): RouteDefinition
 	{
-		$this->addRoute('PATCH', $path, $handler, $middleware, $afterMiddleware);
+		return new RouteDefinition($this, 'PATCH', $path, $handler);
 	}
 
-	public function delete(string $path, mixed $handler, array $middleware = [], array $afterMiddleware = []): void
+	public function delete(string $path, mixed $handler): RouteDefinition
 	{
-		$this->addRoute('DELETE', $path, $handler, $middleware, $afterMiddleware);
+		return new RouteDefinition($this, 'DELETE', $path, $handler);
 	}
 
-	public function options(string $path, mixed $handler, array $middleware = [], array $afterMiddleware = []): void
+	public function options(string $path, mixed $handler): RouteDefinition
 	{
-		$this->addRoute('OPTIONS', $path, $handler, $middleware, $afterMiddleware);
+		return new RouteDefinition($this, 'OPTIONS', $path, $handler);
 	}
 
-	public function redirect(string $path, string $redirectTo): void
+	public function redirect(string $path, string $redirectTo): RouteDefinition
 	{
-		$this->addRoute('GET', $path, fn() => header("Location: {$redirectTo}", true, 302));
+		return new RouteDefinition($this, 'POST', $path, function () use ($redirectTo) {
+			header("Location: ".$redirectTo, true, 302);
+		});
 	}
 
 	public function group(string $prefix, \Closure $callback, array $middleware = [], array $afterMiddleware = []): void
@@ -98,7 +101,12 @@ class Router
 		$this->group($prefix, $callback, $middleware, $afterMiddleware);
 	}
 
-	private function addRoute(string $method, string $path, mixed $handler, array $middleware = [], array $afterMiddleware = []): void
+	public function registerRoute(string $method, string $path, mixed $handler, array $middleware = [], array $afterMiddleware = [], string $name = ""): void
+	{
+		$this->addRoute($method, $path, $handler, $middleware, $afterMiddleware, $name);
+	}
+
+	private function addRoute(string $method, string $path, mixed $handler, array $middleware = [], array $afterMiddleware = [], string $name = ""): void
 	{
 		$fullPath = rtrim($this->currentGroupPrefix . $path, '/') ?: '/';
 
@@ -111,6 +119,7 @@ class Router
 			'handler' => $handler,
 			'middleware' => array_merge($this->currentGroupMiddleware, $middleware),
 			'afterMiddleware' => array_merge($this->currentGroupAfterMiddleware, $afterMiddleware),
+			'name' => $name
 		];
 	}
 

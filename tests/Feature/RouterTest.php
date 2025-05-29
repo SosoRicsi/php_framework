@@ -1,12 +1,12 @@
 <?php
 
-use Radiant\http\Request\Router;
+use Radiant\Http\Request\Route\Router;
 
 beforeEach(function () {
     $this->router = new Router();
 });
 
-test('can register GET route', function () {
+test('it can register GET route', function () {
     $this->router->get('/test', function () {
 		print "ok";
 	});
@@ -17,7 +17,7 @@ test('can register GET route', function () {
     expect($output)->toBe('ok');
 });
 
-test('can register POST route', function () {
+test('it can register POST route', function () {
     $this->router->post('/submit', function () {
 		print "submitted";
 	});
@@ -74,4 +74,87 @@ test('404 fallback works', function () {
     $output = ob_get_clean();
 
     expect($output)->toContain('404');
+});
+
+test('it calls middleware before handler', function () {
+    $called = false;
+
+    $middleware = new class {
+        public function handle($request, $response) {
+            print 'MW|';
+            return true;
+        }
+    };
+
+    $this->router->get('/protected', function () {
+        echo 'handler';
+    })->middleware([get_class($middleware)]);
+
+    ob_start();
+    $this->router->run('/protected', 'GET');
+    $output = ob_get_clean();
+
+    expect($output)->toBe('MW|handler');
+});
+
+test('it calls after middleware after handler', function () {
+    $middleware = new class {
+        public function handle($request, $response) {
+            print '|AFTER';
+            return true;
+        }
+    };
+
+    $this->router->get('/done', function () {
+        echo 'handler';
+    })->afterMiddleware([get_class($middleware)]);
+
+    ob_start();
+    $this->router->run('/done', 'GET');
+    $output = ob_get_clean();
+
+    expect($output)->toBe('handler|AFTER');
+});
+
+test('middleware can stop execution', function () {
+    $middleware = new class {
+        public function handle($request, $response) {
+            echo 'BLOCKED';
+            return false;
+        }
+    };
+
+    $this->router->get('/blocked', function () {
+        echo 'handler';
+    })->middleware([get_class($middleware)]);
+
+    ob_start();
+    $this->router->run('/blocked', 'GET');
+    $output = ob_get_clean();
+
+    expect($output)->toBe('BLOCKED');
+});
+
+test('it can register named route', function () {
+    $this->router->get('/named', function () {
+        echo 'named';
+    })->name('custom.route');
+
+    ob_start();
+    $this->router->run('/named', 'GET');
+    $output = ob_get_clean();
+
+    expect($output)->toBe('named');
+});
+
+test('it handles route with regex param', function () {
+    $this->router->get('/order/{id:\d+}', function ($id) {
+        echo "Order: $id";
+    });
+
+    ob_start();
+    $this->router->run('/order/123', 'GET');
+    $output = ob_get_clean();
+
+    expect($output)->toBe('Order: 123');
 });
