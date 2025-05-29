@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Radiant\Http;
+namespace Radiant\http\Request;
+
+use Radiant\http\Response\Response;
 
 class Router
 {

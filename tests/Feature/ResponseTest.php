@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Radiant\Http\Response;
+use Radiant\Http\Response\Response;
 
 test('it sets and gets status code', function () {
     $response = new Response();

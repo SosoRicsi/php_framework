@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Radiant\Http;
+namespace Radiant\Http\Request;
 
 use Exception;
 use Radiant\Collection\SmartCollection;
