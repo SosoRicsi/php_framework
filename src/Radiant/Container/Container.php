@@ -5,80 +5,81 @@ declare(strict_types=1);
 namespace Radiant\Container;
 
 use Closure;
+use Radiant\Container\Exceptions\ContainerException;
 use ReflectionClass;
 use ReflectionException;
-use Radiant\Container\Exceptions\ContainerException;
 
-class Container
+final class Container
 {
-	protected array $bindings = [];
-	protected array $instances = [];
+    private array $bindings = [];
 
-	public function bind(string $key, Closure $resolver, bool $singleton = false): void
-	{
-		$this->bindings[$key] = [
-			'resolver' => $resolver,
-			'singleton' => $singleton,
-		];
-	}
+    private array $instances = [];
 
-	public function singleton(string $key, Closure $resolver): void
-	{
-		$this->bind($key, $resolver, true);
-	}
+    public function bind(string $key, Closure $resolver, bool $singleton = false): void
+    {
+        $this->bindings[$key] = [
+            'resolver' => $resolver,
+            'singleton' => $singleton,
+        ];
+    }
 
-	public function take(string $key): mixed
-	{
-		// Visszaadja a singleton példányt, ha már létezik
-		if (isset($this->instances[$key])) {
-			return $this->instances[$key];
-		}
+    public function singleton(string $key, Closure $resolver): void
+    {
+        $this->bind($key, $resolver, true);
+    }
 
-		// Ha van bindolva
-		if (isset($this->bindings[$key])) {
-			$binding = $this->bindings[$key];
-			$object = call_user_func($binding['resolver'], $this);
+    public function take(string $key): mixed
+    {
+        // Visszaadja a singleton példányt, ha már létezik
+        if (isset($this->instances[$key])) {
+            return $this->instances[$key];
+        }
 
-			if ($binding['singleton']) {
-				$this->instances[$key] = $object;
-			}
+        // Ha van bindolva
+        if (isset($this->bindings[$key])) {
+            $binding = $this->bindings[$key];
+            $object = call_user_func($binding['resolver'], $this);
 
-			return $object;
-		}
+            if ($binding['singleton']) {
+                $this->instances[$key] = $object;
+            }
 
-		// Autowiring fallback
-		if (!class_exists($key)) {
-			throw new ContainerException("No binding and no class found for [{$key}].");
-		}
+            return $object;
+        }
 
-		try {
-			$reflection = new ReflectionClass($key);
+        // Autowiring fallback
+        if (! class_exists($key)) {
+            throw new ContainerException("No binding and no class found for [{$key}].");
+        }
 
-			if (!$reflection->isInstantiable()) {
-				throw new ContainerException("Class [{$key}] is not instantiable.");
-			}
+        try {
+            $reflection = new ReflectionClass($key);
 
-			$constructor = $reflection->getConstructor();
+            if (! $reflection->isInstantiable()) {
+                throw new ContainerException("Class [{$key}] is not instantiable.");
+            }
 
-			if (is_null($constructor)) {
-				return new $key;
-			}
+            $constructor = $reflection->getConstructor();
 
-			$dependencies = [];
+            if (is_null($constructor)) {
+                return new $key;
+            }
 
-			foreach ($constructor->getParameters() as $parameter) {
-				$type = $parameter->getType();
+            $dependencies = [];
 
-				if (!$type || $type->isBuiltin()) {
-					throw new ContainerException("Cannot resolve parameter \${$parameter->getName()} of [{$key}].");
-				}
+            foreach ($constructor->getParameters() as $parameter) {
+                $type = $parameter->getType();
 
-				$dependencies[] = $this->take($type->getName());
-			}
+                if (! $type || $type->isBuiltin()) {
+                    throw new ContainerException("Cannot resolve parameter \${$parameter->getName()} of [{$key}].");
+                }
 
-			return $reflection->newInstanceArgs($dependencies);
-		} catch (ReflectionException $e) {
-			throw new ContainerException("Failed to reflect class [{$key}]: {$e->getMessage()}", 0, $e);
-		}
-	}
+                $dependencies[] = $this->take($type->getName());
+            }
+
+            return $reflection->newInstanceArgs($dependencies);
+        } catch (ReflectionException $e) {
+            throw new ContainerException("Failed to reflect class [{$key}]: {$e->getMessage()}", 0, $e);
+        }
+    }
 }

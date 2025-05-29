@@ -6,4 +6,4 @@ namespace Radiant\Container\Exceptions;
 
 use RuntimeException;
 
-class ContainerException extends RuntimeException {}
+final class ContainerException extends RuntimeException {}
