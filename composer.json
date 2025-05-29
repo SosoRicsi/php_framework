@@ -1,0 +1,31 @@
+{
+    "name": "aurora/framework",
+    "description": "The core package of the framework.",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Radiant\\": "src/Radiant",
+            "Tests\\": "tests/"
+        },
+        "files": [
+            "src/Radiant/functions.php"
+        ]
+    },
+    "authors": [
+        {
+            "name": "Jarkó Richárd",
+            "email": "jarkoricsi16@gmail.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "require-dev": {
+        "pestphp/pest": "^3.8",
+        "laravel/pint": "^1.22"
+    }
+}
