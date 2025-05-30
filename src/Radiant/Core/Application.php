@@ -10,6 +10,18 @@ class Application
 
 	protected array $middlewareGroups = [];
 
+	protected Container $container;
+
+	public function __construct(Container $container)
+	{
+		$this->container = $container;
+	}
+
+	public function container(): Container
+	{
+		return $this->container;
+	}
+
 	public function registerProviders(array $providers): void
 	{
 		foreach ($providers as $providerClass) {
