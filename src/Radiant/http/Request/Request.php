@@ -7,7 +7,7 @@ namespace Radiant\Http\Request;
 use Exception;
 use Radiant\Collection\SmartCollection;
 
-final class Request
+class Request
 {
     public string $method;
 

@@ -15,7 +15,7 @@ class Router
 	private array $errors = [];
 
 	private Response $response;
-	private Request $request;
+	private ?Request $request = null;
 
 	private string $currentGroupPrefix = '';
 	private array $currentGroupMiddleware = [];
@@ -28,7 +28,6 @@ class Router
 
 	public function __construct()
 	{
-		$this->request = new Request();
 		$this->response = new Response();
 
 		foreach (self::SUPPORTED_METHODS as $method) {
@@ -187,14 +186,22 @@ class Router
 		return $dependencies;
 	}
 
-	private function instantiateOrGetSharedInstance(string $className): object
+	private function instantiateOrGetSharedInstance(string|object $classOrInstance): object
 	{
-		return $this->sharedInstances[$className]
-			??= new $className();
+		if (is_object($classOrInstance)) {
+			return $classOrInstance;
+		}
+		
+		return $this->sharedInstances[$classOrInstance]
+			??= new $classOrInstance();
 	}
 
 	public function run(?string $uri = null, ?string $method = null): void
 	{
+		if (!$this->request instanceof Request) {
+			$this->request = new Request();
+		}
+
 		$requestUri = parse_url($uri ?? $_SERVER['REQUEST_URI']);
 		$requestPath = $requestUri['path'] ?? '/';
 		$method = $method ?? $_SERVER['REQUEST_METHOD'];

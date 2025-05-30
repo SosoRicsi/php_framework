@@ -10,8 +10,8 @@ beforeEach(function () {
 
 test('it can register GET route', function () {
     $this->router->get('/test', function () {
-		print "ok";
-	});
+        print "ok";
+    });
     ob_start();
     $this->router->run('/test', 'GET');
     $output = ob_get_clean();
@@ -21,8 +21,8 @@ test('it can register GET route', function () {
 
 test('it can register POST route', function () {
     $this->router->post('/submit', function () {
-		print "submitted";
-	});
+        print "submitted";
+    });
     ob_start();
     $this->router->run('/submit', 'POST');
     $output = ob_get_clean();
@@ -33,8 +33,8 @@ test('it can register POST route', function () {
 test('group adds prefix to route', function () {
     $this->router->group('/admin', function ($router) {
         $router->get('/dashboard', function () {
-			print "admin panel";
-		});
+            print "admin panel";
+        });
     });
 
     ob_start();
@@ -47,8 +47,8 @@ test('group adds prefix to route', function () {
 test('version adds versioned prefix', function () {
     $this->router->version(function ($router) {
         $router->get('/status', function () {
-			print "v1";
-		});
+            print "v1";
+        });
     }, prefix: '', version: '1');
 
     ob_start();
@@ -82,7 +82,8 @@ test('it calls middleware before handler', function () {
     $called = false;
 
     $middleware = new class implements MiddlewareInterface {
-        public function handle($request, $response, $next): Response {
+        public function handle($request, $response, $next): Response
+        {
             print 'MW|';
             return $next($request, $response);
         }
@@ -101,7 +102,8 @@ test('it calls middleware before handler', function () {
 
 test('it calls after middleware after handler', function () {
     $middleware = new class implements MiddlewareInterface {
-        public function handle($request, $response, $next): Response {
+        public function handle($request, $response, $next): Response
+        {
             print '|AFTER';
             return $next($request, $response);
         }
@@ -119,8 +121,9 @@ test('it calls after middleware after handler', function () {
 });
 
 test('middleware can stop execution', function () {
-    $middleware = new class implements MiddlewareInterface{
-        public function handle($request, $response, $next): Response {
+    $middleware = new class implements MiddlewareInterface {
+        public function handle($request, $response, $next): Response
+        {
             echo 'BLOCKED';
             return $response;
         }
@@ -159,4 +162,57 @@ test('it handles route with regex param', function () {
     $output = ob_get_clean();
 
     expect($output)->toBe('Order: 123');
+});
+
+test('it uses custom Request subclass automatically', function () {
+    require_once dirname(__DIR__) . '/stubs/CustomRequest.php';
+
+    $this->router->get('/custom', function (\Tests\Stubs\CustomRequest $req) {
+        echo 'Custom: ' . $req->customValue();
+    });
+
+    ob_start();
+    $this->router->run('/custom', 'GET');
+    $output = ob_get_clean();
+
+    expect($output)->toBe('Custom: from subclass');
+});
+
+test('versioned group uses shared middleware correctly', function () {
+    $this->router->version(function ($router) {
+        $router->get('/ping', function () {
+            echo 'pong';
+        });
+    }, middleware: [new class implements MiddlewareInterface {
+        public function handle($req, $res, $next): Response
+        {
+            echo 'PRE|';
+            return $next($req, $res);
+        }
+    }], afterMiddleware: [new class implements MiddlewareInterface {
+        public function handle($req, $res, $next): Response
+        {
+            $next($req, $res);
+            echo '|POST';
+            return $res;
+        }
+    }], version: '2');
+
+    ob_start();
+    $this->router->run('/api/v2/ping', 'GET');
+    $output = ob_get_clean();
+
+    expect($output)->toBe('PRE|pong|POST');
+});
+
+test('route injects object dependency if not built-in', function () {
+    $this->router->get('/inject', function (Response $res) {
+        echo get_class($res);
+    });
+
+    ob_start();
+    $this->router->run('/inject', 'GET');
+    $output = ob_get_clean();
+
+    expect($output)->toContain('Radiant\Http\Response\Response');
 });
