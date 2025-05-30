@@ -19,6 +19,11 @@ abstract class Facade
 		return self::$instances[$key];
 	}
 
+	public static function getInstance(): object
+	{
+		return static::resolveInstance();
+	}
+
 	abstract protected static function registerAccessor(): object;
 
 	public static function __callStatic($method, $args)
