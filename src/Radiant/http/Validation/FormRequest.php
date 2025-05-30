@@ -2,6 +2,8 @@
 
 namespace Radiant\Http\Validation;
 
+use Radiant\Http\Validation\Rules\RuleInterface;
+
 abstract class FormRequest
 {
 	abstract public function rules(): array;
@@ -26,6 +28,10 @@ abstract class FormRequest
 			$value = $data[$field] ?? null;
 
 			foreach ($rules as $rule) {
+				if (is_string($rule)) {
+					$rule = RuleFactory::resolve($rule);
+				}
+
 				if (!$rule->validate($value)) {
 					$this->errors[$field][] = $rule->message();
 				}
