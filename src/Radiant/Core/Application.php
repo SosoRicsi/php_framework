@@ -8,6 +8,8 @@ class Application
 
 	protected array $booted = [];
 
+	protected array $middlewareGroups = [];
+
 	public function registerProviders(array $providers): void
 	{
 		foreach ($providers as $providerClass) {
@@ -15,6 +17,16 @@ class Application
 			$provider->register();
 			$this->providers[] = $provider;
 		}
+	}
+
+	public function defineMiddlewareGroup(string $name, array $middlewareList): void
+	{
+		$this->middlewareGroups[$name] = $middlewareList;
+	}
+
+	public function getMiddlewareGroup(string $name): array
+	{
+		return $this->middlewareGroups[$name] ?? [];
 	}
 
 	public function boot(): void

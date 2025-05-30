@@ -1,8 +1,9 @@
 <?php
 
-use Radiant\Http\Middleware\MiddlewareInterface;
-use Radiant\Http\Request\Route\Router;
+use Radiant\Core\Application;
 use Radiant\Http\Response\Response;
+use Radiant\Http\Request\Route\Router;
+use Radiant\Http\Middleware\MiddlewareInterface;
 
 beforeEach(function () {
     $this->router = new Router();
@@ -215,4 +216,39 @@ test('route injects object dependency if not built-in', function () {
     $output = ob_get_clean();
 
     expect($output)->toContain('Radiant\Http\Response\Response');
+});
+
+test('middleware group works via Application', function () {
+    $app = new Application();
+    $app->defineMiddlewareGroup('web', [
+        new class implements MiddlewareInterface {
+            public function handle($request, $response, $next): Response
+            {
+                echo 'MW1|';
+                return $next($request, $response);
+            }
+        },
+        new class implements MiddlewareInterface {
+            public function handle($request, $response, $next): Response
+            {
+                echo 'MW2|';
+                return $next($request, $response);
+            }
+        }
+    ]);
+
+    $router = new Router();
+
+    // Ez volt a hiányzó lépés
+    $router->setApplication($app);
+
+    $router->get('/home', function () {
+        echo 'handler';
+    })->middleware(['@web']);
+
+    ob_start();
+    $router->run('/home', 'GET');
+    $out = ob_get_clean();
+
+    expect($out)->toBe('MW1|MW2|handler');
 });

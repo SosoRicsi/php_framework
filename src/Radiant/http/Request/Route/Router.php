@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Radiant\Http\Request\Route;
 
+use Radiant\Core\Application;
 use Radiant\Http\Request\Request;
 use Radiant\http\Response\Response;
 use Radiant\Http\Middleware\MiddlewareHandler;
@@ -34,6 +35,12 @@ class Router
 			$this->routes[$method] = [];
 		}
 	}
+
+	public function setApplication(Application $app): void
+	{
+		$this->sharedInstances[Application::class] = $app;
+	}
+
 
 	public function setVersion(?string $version = ""): void
 	{
@@ -115,10 +122,25 @@ class Router
 			$handler = [$handler, '__invoke'];
 		}
 
+		$resolvedMiddleware = [];
+		foreach ($middleware as $item) {
+			if (is_string($item) && str_starts_with($item, '@')) {
+				$group = ltrim($item, '@');
+
+				$app = $this->sharedInstances[Application::class] ?? null;
+
+				if ($app) {
+					$resolvedMiddleware = array_merge($resolvedMiddleware, $app->getMiddlewareGroup($group));
+				}
+			} else {
+				$resolvedMiddleware[] = $item;
+			}
+		}
+
 		$this->routes[$method][] = [
 			'path' => $fullPath,
 			'handler' => $handler,
-			'middleware' => array_merge($this->currentGroupMiddleware, $middleware),
+			'middleware' => array_merge($this->currentGroupMiddleware, $resolvedMiddleware),
 			'afterMiddleware' => array_merge($this->currentGroupAfterMiddleware, $afterMiddleware),
 			'name' => $name
 		];
@@ -191,7 +213,7 @@ class Router
 		if (is_object($classOrInstance)) {
 			return $classOrInstance;
 		}
-		
+
 		return $this->sharedInstances[$classOrInstance]
 			??= new $classOrInstance();
 	}
