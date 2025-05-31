@@ -137,6 +137,19 @@ class Router
 			}
 		}
 
+		// Mindig egészítsük ki a web middleware csoporttal
+		$app = $this->sharedInstances[Application::class] ?? null;
+
+		if ($app) {
+			$webMiddleware = $app->getMiddlewareGroup('web');
+
+			foreach ($webMiddleware as $mw) {
+				if (!in_array($mw, $resolvedMiddleware, true)) {
+					$resolvedMiddleware[] = $mw;
+				}
+			}
+		}
+
 		$this->routes[$method][] = [
 			'path' => $fullPath,
 			'handler' => $handler,

@@ -253,3 +253,15 @@ test('middleware group works via Application', function () {
 
     expect($out)->toBe('MW1|MW2|handler');
 });
+
+test('it supports fluent route chaining', function () {
+    $this->router->get('/fluent', function () {
+        echo 'chained';
+    })->middleware([])->name('fluent.route')->afterMiddleware([]);
+
+    ob_start();
+    $this->router->run('/fluent', 'GET');
+    $output = ob_get_clean();
+
+    expect($output)->toBe('chained');
+});

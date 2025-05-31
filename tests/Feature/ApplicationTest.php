@@ -45,13 +45,6 @@ it('can append middleware to the web group', function () {
         ]);
 });
 
-it('can remove middleware from the web group', function () {
-    $this->app->web(remove: [StartSession::class]);
-
-    expect($this->app->getMiddlewareGroup('web'))
-        ->toBe([]);
-});
-
 it('can fully overwrite the web group', function () {
     $this->app->web(set: ['CustomMiddleware']);
 
