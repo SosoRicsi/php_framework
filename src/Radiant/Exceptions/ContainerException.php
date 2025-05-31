@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Radiant\Container\Exceptions;
+namespace Radiant\Exceptions;
 
 use RuntimeException;
 

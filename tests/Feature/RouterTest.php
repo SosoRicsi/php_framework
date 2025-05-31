@@ -1,6 +1,7 @@
 <?php
 
 use Radiant\Core\Application;
+use Radiant\Core\Container;
 use Radiant\Http\Response\Response;
 use Radiant\Http\Request\Route\Router;
 use Radiant\Http\Middleware\MiddlewareInterface;
@@ -219,7 +220,7 @@ test('route injects object dependency if not built-in', function () {
 });
 
 test('middleware group works via Application', function () {
-    $app = new Application();
+    $app = new Application(new Container);
     $app->defineMiddlewareGroup('web', [
         new class implements MiddlewareInterface {
             public function handle($request, $response, $next): Response
